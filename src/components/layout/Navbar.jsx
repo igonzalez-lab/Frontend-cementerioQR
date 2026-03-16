@@ -1,4 +1,5 @@
-import React, { Fragment, useCallback, useRef, useState } from 'react';
+// Agregué useMemo a las importaciones
+import React, { Fragment, useCallback, useRef, useState, useMemo } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -30,6 +31,24 @@ const Navbar = () => {
 
     const [anchorEl, setAnchorEl] = useState(null);
     const [mobileViewOpen, setMobileViewOpen] = useState(false);
+
+    // Centralicé la desencriptación del token en este useMemo. 
+    // Lo hice porque hacerlo directo en el render me rompía la app al intentar desencriptar lo mismo varias veces y ponía el navegador súper lento.
+    const userData = useMemo(() => {
+        if (!token) return null;
+        try {
+            const decodedToken = jwtDecode(decryptMessage(token));
+            return {
+                name: decryptMessage(decryptMessage(decodedToken.name)),
+                surname: decryptMessage(decryptMessage(decodedToken.surname)),
+                username: decryptMessage(decryptMessage(decodedToken.username)),
+                role: String(decryptMessage(decodedToken.role))
+            };
+        } catch (error) {
+            console.error("Error al decodificar token", error);
+            return null;
+        }
+    }, [token]);
 
     const handleSelectNavItem = useCallback(async (path) => {
         setAnchorEl(null);
@@ -91,7 +110,8 @@ const Navbar = () => {
                     </ListItemButton>
                 </Tooltip>
 
-                {String(decryptMessage(jwtDecode(decryptMessage(token)).role)) === '5' && (
+                {/* Reemplacé las llamadas largas al token por userData.role */}
+                {userData?.role === '5' && (
                     <Tooltip placement='right' title='Ir a Admin. Usuarios'>
                         <ListItemButton onClick={() => handleSelectNavItem('/admin')}>
                             <ListItemIcon>
@@ -111,7 +131,8 @@ const Navbar = () => {
                     </ListItemButton>
                 </Tooltip>
 
-                {String(decryptMessage(jwtDecode(decryptMessage(token)).role)) !== '2' && (
+                {/* Reemplacé las llamadas largas al token por userData.role */}
+                {userData?.role !== '2' && (
                     <Tooltip placement='right' title='Ir a Cementerios'>
                         <ListItemButton onClick={() => handleSelectNavItem('/cementerios')}>
                             <ListItemIcon>
@@ -122,7 +143,8 @@ const Navbar = () => {
                     </Tooltip>
                 )}
 
-                {String(decryptMessage(jwtDecode(decryptMessage(token)).role)) !== '2' && (
+                {/* Reemplacé las llamadas largas al token por userData.role */}
+                {userData?.role !== '2' && (
                     <Tooltip placement='right' title='Ir a Linea de Tiempo General'>
                         <ListItemButton onClick={() => handleSelectNavItem('/linea-tiempo')}>
                             <ListItemIcon>
@@ -154,9 +176,10 @@ const Navbar = () => {
                         </Box>
 
                         <Box width={'fit-content'} ml={'auto'}>
-                            <Tooltip title={`${decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).name))} ${decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).surname))}`}>
+                            {/* Limpié el código usando los datos procesados en userData */}
+                            <Tooltip title={`${userData?.name} ${userData?.surname}`}>
                                 <IconButton size='large' onClick={(e) => setAnchorEl(e.currentTarget)} color='inherit' sx={{ float: 'right', width: 50, height: 50 }}>
-                                    <Avatar {...stringAvatar(`${decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).name))} ${decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).surname))}`)} />
+                                    <Avatar {...stringAvatar(`${userData?.name} ${userData?.surname}`)} />
                                 </IconButton>
                             </Tooltip>
 
@@ -164,12 +187,12 @@ const Navbar = () => {
                                 <Box component={Paper} elevation={0} width={320} maxWidth={'100%'} m={'auto'} overflow={'auto'}>
                                     <Box display={'flex'} mt={-1}>
                                         <Box m={1.3}>
-                                            <Avatar {...stringAvatar(`${decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).name))} ${decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).surname))}`)} />
+                                            <Avatar {...stringAvatar(`${userData?.name} ${userData?.surname}`)} />
                                         </Box>
 
                                         <Box display={'flex'} flexDirection={'column'} mt={1} mb={1}>
-                                            <Typography variant='body1'>{`${decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).name))} ${decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).surname))}`}</Typography>
-                                            <Typography variant='body2'>{decryptMessage(decryptMessage(jwtDecode(decryptMessage(token)).username))}</Typography>
+                                            <Typography variant='body1'>{`${userData?.name} ${userData?.surname}`}</Typography>
+                                            <Typography variant='body2'>{userData?.username}</Typography>
                                         </Box>
                                     </Box>
 

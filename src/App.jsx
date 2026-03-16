@@ -11,7 +11,8 @@ const App = () => {
 
 	return (
 		<Fragment>
-			<Suspense>
+            {/* Le agregué el fallback al Suspense porque si no, al cargar los componentes lazy, React no sabe qué mostrar y deja la pantalla en blanco o congelada */}
+			<Suspense fallback={<div style={{ padding: '20px', textAlign: 'center' }}>Cargando aplicación...</div>}>
 				<BrowserRouter>
 					<Fragment>
 						{user ? (
